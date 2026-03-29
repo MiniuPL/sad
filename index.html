@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Protokół Szkód Sadowniczych</title>
     <style>
-        /* Wygląd aplikacji */
+        :root {
+            --green: #27ae60;
+            --blue: #2980b9;
+            --dark: #2c3e50;
+            --gray: #7f8c8d;
+            --light-bg: #f4f7f6;
+            --border: #ccc;
+        }
+
         body {
             font-family: sans-serif;
-            background-color: #f4f7f6;
+            background-color: var(--light-bg);
             color: #333;
             margin: 0;
             padding: 15px;
@@ -17,8 +25,16 @@
 
         h1 {
             text-align: center;
-            color: #2c3e50;
+            color: var(--dark);
             font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .doc-id {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 20px;
         }
 
         section {
@@ -29,45 +45,88 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
+        h2 {
+            color: var(--dark);
+            font-size: 17px;
+            margin-top: 0;
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 8px;
+        }
+
         label {
             font-weight: bold;
             font-size: 14px;
             color: #555;
+            display: block;
+            margin-top: 10px;
         }
 
-        input[type="text"], 
-        input[type="number"], 
-        input[type="file"] {
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
+            padding: 10px 12px;
+            margin: 5px 0 12px 0;
+            border: 1px solid var(--border);
             border-radius: 4px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 15px;
+            background: #fff;
+            color: #333;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px 0;
+            margin: 5px 0 12px 0;
+            font-size: 15px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 15px;
+        }
+
+        @media (max-width: 480px) {
+            .two-col { grid-template-columns: 1fr; }
         }
 
         button {
-            background-color: #27ae60;
+            background-color: var(--green);
             color: white;
-            padding: 14px 20px;
-            margin: 8px 0;
+            padding: 13px 18px;
+            margin: 6px 0;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
+            transition: background 0.2s;
         }
 
-        button:active {
-            background-color: #1e8449;
+        button:active { filter: brightness(0.88); }
+
+        button.btn-secondary { background-color: var(--gray); }
+        button.btn-blue      { background-color: var(--blue); }
+        button.btn-danger    { background-color: #e74c3c; width: auto; padding: 6px 10px; font-size: 13px; }
+        button.btn-save      { background-color: var(--blue); font-size: 19px; padding: 16px; margin-top: 10px; }
+
+        /* ---- GPS status ---- */
+        #gps-status {
+            font-size: 13px;
+            color: #666;
+            margin: 5px 0 10px;
+            min-height: 20px;
         }
 
-        .table-wrapper {
-            overflow-x: auto;
-        }
+        #gps-status.ok    { color: var(--green); }
+        #gps-status.error { color: #e74c3c; }
+
+        /* ---- Tabela ---- */
+        .table-wrapper { overflow-x: auto; }
 
         table {
             width: 100%;
@@ -77,94 +136,219 @@
 
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 6px 4px;
             text-align: center;
+            vertical-align: middle;
         }
 
         th {
             background-color: #f2f2f2;
+            font-size: 13px;
+        }
+
+        input.ti {
+            width: 100%;
+            padding: 7px 5px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
             font-size: 14px;
+            box-sizing: border-box;
         }
 
-        input.table-input {
-            width: 90%;
-            margin: 0;
-            padding: 8px;
+        input.ti:focus { outline: none; border-color: var(--blue); }
+
+        /* ---- Zdjęcia ---- */
+        #preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        .save-btn {
-            background-color: #2980b9;
-            margin-top: 20px;
-            font-size: 20px;
-            padding: 15px;
+        .photo-thumb {
+            position: relative;
+            display: inline-block;
         }
 
-        #preview img {
+        .photo-thumb img {
             width: 80px;
             height: 80px;
             object-fit: cover;
             border-radius: 5px;
             border: 1px solid #ddd;
+            display: block;
         }
 
-        /* Ustawienia dla wydruku PDF */
+        .photo-thumb .del-photo {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+        }
+
+        /* ---- Walidacja ---- */
+        .field-error {
+            border-color: #e74c3c !important;
+            background: #fff5f5 !important;
+        }
+
+        .validation-msg {
+            color: #e74c3c;
+            font-size: 13px;
+            margin: -8px 0 10px;
+            display: none;
+        }
+
+        /* ==============================
+           DRUK PDF
+           ============================== */
         @media print {
             body {
-                background-color: white;
-                padding: 0;
+                background: white;
+                padding: 5mm;
+                font-size: 12px;
             }
+
+            h1 { font-size: 18px; }
+
             section {
                 box-shadow: none;
-                border: 1px solid #eee;
+                border: 1px solid #ccc;
                 page-break-inside: avoid;
+                padding: 10px;
+                margin-bottom: 12px;
             }
-            button {
-                display: none !important; /* Ukrywamy przyciski na wydruku */
-            }
-            input {
-                border: none;
+
+            /* Ukryj elementy interaktywne */
+            button,
+            input[type="file"],
+            #preview,
+            .no-print { display: none !important; }
+
+            /* Zamienione przez JS na spany przed drukiem */
+            .print-value {
+                display: inline-block;
                 border-bottom: 1px solid #000;
-                border-radius: 0;
-                padding: 4px;
-                margin: 4px 0;
+                min-width: 120px;
+                padding: 2px 4px;
+                font-size: 12px;
             }
+
+            .print-value.empty::after {
+                content: '.....................';
+                color: #bbb;
+                letter-spacing: 2px;
+            }
+
+            table { font-size: 11px; }
+            th, td { padding: 4px 3px; }
         }
     </style>
 </head>
 <body>
 
-    <h1>Protokół Szkód</h1>
+    <h1>📋 Protokół Szkód Sadowniczych</h1>
+    <p class="doc-id">Nr protokołu: <strong id="nr-protokolu"></strong> &nbsp;|&nbsp; Data sporządzenia: <strong id="data-sporzadzenia"></strong></p>
 
+    <!-- 1. ZDARZENIE -->
     <section>
-        <h2>1. Lokalizacja</h2>
+        <h2>1. Dane zdarzenia</h2>
+        <div class="two-col">
+            <div>
+                <label for="data-zdarzenia">Data zdarzenia:</label>
+                <input type="date" id="data-zdarzenia">
+            </div>
+            <div>
+                <label for="rodzaj-szkody">Rodzaj szkody:</label>
+                <select id="rodzaj-szkody">
+                    <option value="">— wybierz —</option>
+                    <option>Grad</option>
+                    <option>Przymrozek wiosenny</option>
+                    <option>Powódź / podtopienie</option>
+                    <option>Susza</option>
+                    <option>Huragan / wiatr</option>
+                    <option>Pożar</option>
+                    <option>Inne</option>
+                </select>
+            </div>
+        </div>
+        <label for="rzeczoznawca">Imię i nazwisko rzeczoznawcy:</label>
+        <input type="text" id="rzeczoznawca" placeholder="Wpisz dane rzeczoznawcy">
+    </section>
+
+    <!-- 2. LOKALIZACJA -->
+    <section>
+        <h2>2. Lokalizacja</h2>
         <button type="button" onclick="pobierzLokalizacje()">📍 Pobierz lokalizację GPS</button>
-        <p style="font-size: 14px; color: #666;">Współrzędne: <span id="coords">Brak danych</span></p>
-        
-        <label>Numer działki (ULDK Geoportal):</label>
-        <input type="text" id="dzialka" placeholder="Kliknij GPS, aby pobrać...">
+        <div id="gps-status">Oczekiwanie na GPS…</div>
+
+        <!-- BUG FIX: ULDK nie wspiera CORS – pokazujemy link pomocniczy -->
+        <div id="uldk-link" style="display:none; font-size:13px; color:#666; margin-bottom:10px;">
+            ℹ️ Brak automatycznego numeru działki.
+            <a id="uldk-href" href="#" target="_blank" rel="noopener">Sprawdź ręcznie w Geoportalu ULDK ↗</a>
+        </div>
+
+        <label for="dzialka">Numer działki (wg ULDK):</label>
+        <input type="text" id="dzialka" placeholder="np. 141301_2.0001.AR_25/3">
+
+        <!-- Ukryte pola do przechowywania współrzędnych w wydruku -->
+        <input type="hidden" id="lat-hidden">
+        <input type="hidden" id="lon-hidden">
+
+        <label for="gmina">Gmina / Miejscowość:</label>
+        <input type="text" id="gmina" placeholder="np. Sandomierz">
     </section>
 
+    <!-- 3. DANE POSZKODOWANEGO -->
     <section>
-        <h2>2. Dane Poszkodowanego</h2>
-        <label>Imię i Nazwisko:</label>
-        <input type="text" placeholder="Wpisz dane">
-        
-        <label>Adres zamieszkania:</label>
-        <input type="text" placeholder="Wpisz adres">
-        
-        <label>Numer polisy:</label>
-        <input type="text" placeholder="Wpisz numer">
+        <h2>3. Dane poszkodowanego</h2>
+        <label for="imie-nazwisko">Imię i Nazwisko:</label>
+        <input type="text" id="imie-nazwisko" placeholder="Wpisz dane">
+        <p class="validation-msg" id="err-imie">Pole wymagane</p>
+
+        <label for="adres">Adres zamieszkania:</label>
+        <input type="text" id="adres" placeholder="Ulica, nr domu, kod pocztowy, miejscowość">
+
+        <div class="two-col">
+            <div>
+                <label for="pesel">PESEL / NIP:</label>
+                <input type="text" id="pesel" placeholder="Wpisz numer">
+            </div>
+            <div>
+                <label for="polisa">Numer polisy:</label>
+                <input type="text" id="polisa" placeholder="Wpisz numer">
+                <p class="validation-msg" id="err-polisa">Pole wymagane</p>
+            </div>
+        </div>
     </section>
 
+    <!-- 4. ZDJĘCIA -->
     <section>
-        <h2>3. Zdjęcia z terenu</h2>
+        <h2>4. Dokumentacja fotograficzna</h2>
         <label>Zrób lub wybierz zdjęcia:</label>
-        <input type="file" id="foto" accept="image/*" capture="camera" multiple>
-        <div id="preview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+        <!--
+            BUG FIX: usunięto `capture="camera"` – jest niekompatybilne z `multiple` na iOS.
+            Użytkownik może teraz wybrać zarówno z aparatu, jak i z galerii.
+        -->
+        <input type="file" id="foto" accept="image/*" multiple>
+        <div id="preview"></div>
     </section>
 
+    <!-- 5. SZCZEGÓŁY SZKODY -->
     <section>
-        <h2>4. Szczegóły szkody</h2>
+        <h2>5. Szczegóły uszkodzeń</h2>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -172,101 +356,275 @@
                         <th>Działka</th>
                         <th>Uprawa</th>
                         <th>Pow. (ha)</th>
-                        <th>% Uszkodzeń</th>
+                        <th>% uszkodzeń</th>
                         <th>Uwagi</th>
+                        <th class="no-print">Usuń</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-upraw">
-                    <tr>
-                        <td><input type="text" class="table-input"></td>
-                        <td><input type="text" class="table-input"></td>
-                        <td><input type="number" step="0.01" class="table-input"></td>
-                        <td><input type="number" class="table-input"></td>
-                        <td><input type="text" class="table-input"></td>
-                    </tr>
+                    <!-- Jeden pusty wiersz na start -->
                 </tbody>
             </table>
         </div>
-        <button type="button" onclick="dodajWiersz()" style="background-color: #7f8c8d; margin-top: 15px;">+ Dodaj kolejny wiersz</button>
+        <button type="button" class="btn-secondary" onclick="dodajWiersz()" style="margin-top:12px;">+ Dodaj wiersz</button>
     </section>
 
-    <button type="button" class="save-btn" onclick="window.print()">💾 GENERUJ RAPORT PDF</button>
+    <!-- 6. UWAGI KOŃCOWE -->
+    <section>
+        <h2>6. Uwagi końcowe</h2>
+        <label for="uwagi-ogolne">Dodatkowe informacje / komentarz rzeczoznawcy:</label>
+        <input type="text" id="uwagi-ogolne" placeholder="Wpisz uwagi ogólne (opcjonalnie)">
+    </section>
 
-    <!-- SKRYPTY JAVASCRIPT -->
+    <button type="button" class="btn-save" onclick="generujRaport()">💾 GENERUJ RAPORT PDF</button>
+
+
     <script>
-        // 1. Obsługa GPS i Geoportalu (ULDK)
-        async function pobierzLokalizacje() {
-            const poleStatusu = document.getElementById('coords');
-            const poleDzialki = document.getElementById('dzialka');
-            
-            if (!navigator.geolocation) {
-                poleStatusu.textContent = "Błąd: Brak GPS.";
-                return;
-            }
+    /* =====================================================
+       INICJALIZACJA: numer protokołu i data sporządzenia
+       ===================================================== */
+    (function init() {
+        const now = new Date();
 
-            poleStatusu.textContent = "Namierzam... 🛰️";
-            poleDzialki.value = "Szukam numeru...";
+        // Numer = rok + miesiąc + losowy 4-cyfrowy sufix
+        const nr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${Math.floor(1000 + Math.random()*9000)}`;
+        document.getElementById('nr-protokolu').textContent = nr;
 
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                poleStatusu.innerHTML = `Szer: ${lat.toFixed(6)}, Dł: ${lon.toFixed(6)}`;
+        const opcje = { year:'numeric', month:'long', day:'numeric' };
+        document.getElementById('data-sporzadzenia').textContent = now.toLocaleDateString('pl-PL', opcje);
 
-                const url = `https://uldk.gugik.gov.pl/cgi-bin/demo?request=GetParcelByXY&xy=${lon},${lat}&result=teryt,region,commune,district,parcel`;
+        // Ustaw dzisiejszą datę jako domyślną dla daty zdarzenia
+        document.getElementById('data-zdarzenia').valueAsDate = now;
+
+        // Dodaj pierwszy pusty wiersz
+        dodajWiersz();
+    })();
+
+
+    /* =====================================================
+       GPS + ULDK
+       ===================================================== */
+    async function pobierzLokalizacje() {
+        const status  = document.getElementById('gps-status');
+        const poleDzialki = document.getElementById('dzialka');
+        const uldkLink    = document.getElementById('uldk-link');
+        const uldkHref    = document.getElementById('uldk-href');
+
+        status.className = '';
+        status.textContent = '🛰️ Namierzam pozycję…';
+
+        if (!navigator.geolocation) {
+            status.className = 'error';
+            status.textContent = '❌ GPS niedostępny w tej przeglądarce.';
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                document.getElementById('lat-hidden').value = lat;
+                document.getElementById('lon-hidden').value = lon;
+
+                status.className = 'ok';
+                status.textContent = `✅ GPS: ${lat.toFixed(6)}°N, ${lon.toFixed(6)}°E`;
+
+                // --- ULDK ---
+                // BUG FIX: poprawny endpoint (nie /cgi-bin/demo)
+                const uldkUrl = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${lon},${lat}&result=teryt,region,commune,district,parcel`;
+
+                poleDzialki.placeholder = 'Pobieranie numeru działki…';
 
                 try {
-                    const response = await fetch(url);
-                    const data = await response.text();
+                    const resp = await fetch(uldkUrl);
+                    const text = await resp.text();
 
-                    if (data.startsWith('0')) { 
-                        // Sukces - bierzemy drugą linijkę z odpowiedzi serwera
-                        const wynik = data.split('\n')[1]; 
-                        poleDzialki.value = wynik; 
+                    // Odpowiedź: pierwsza linia to kod (0=sukces, 1=błąd), druga to dane
+                    const lines = text.trim().split('\n');
+                    if (lines[0].trim() === '0' && lines[1]) {
+                        poleDzialki.value = lines[1].trim();
+                        poleDzialki.placeholder = '';
                     } else {
-                        poleDzialki.value = "Nie znaleziono działki dla tych współrzędnych.";
+                        throw new Error('Brak wyników ULDK');
                     }
-                } catch (error) {
-                    poleDzialki.value = "Błąd połączenia z Geoportalem.";
+                } catch {
+                    // BUG FIX: ULDK blokuje CORS – pokazujemy link ręczny zamiast błędu krytycznego
+                    poleDzialki.placeholder = 'Wpisz ręcznie lub skorzystaj z linku poniżej';
+                    uldkHref.href = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${lon},${lat}&result=teryt,region,commune,district,parcel`;
+                    uldkLink.style.display = 'block';
                 }
-            }, (error) => {
-                poleStatusu.textContent = "Błąd odczytu GPS. Sprawdź uprawnienia.";
-                poleDzialki.value = "";
-            }, {
-                enableHighAccuracy: true // Wymuszamy najdokładniejszy GPS
-            });
+            },
+            (err) => {
+                status.className = 'error';
+                const komunikaty = {
+                    1: '❌ Odmówiono dostępu do lokalizacji. Sprawdź uprawnienia przeglądarki.',
+                    2: '❌ Nie można ustalić pozycji. Sprawdź sygnał GPS.',
+                    3: '❌ Przekroczono czas oczekiwania na GPS.'
+                };
+                status.textContent = komunikaty[err.code] || '❌ Nieznany błąd GPS.';
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    }
+
+
+    /* =====================================================
+       ZDJĘCIA – podgląd z możliwością usunięcia
+       ===================================================== */
+    // BUG FIX: zapamiętujemy pliki w tablicy (input nie obsługuje mutacji)
+    let selectedFiles = [];
+
+    document.getElementById('foto').addEventListener('change', function () {
+        Array.from(this.files).forEach(f => {
+            if (!selectedFiles.find(x => x.name === f.name && x.size === f.size)) {
+                selectedFiles.push(f);
+            }
+        });
+        renderThumbs();
+        this.value = ''; // reset, by móc dodawać kolejne zdjęcia
+    });
+
+    function renderThumbs() {
+        const preview = document.getElementById('preview');
+        preview.innerHTML = '';
+        selectedFiles.forEach((file, idx) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const wrap = document.createElement('div');
+                wrap.className = 'photo-thumb';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = file.name;
+
+                const btn = document.createElement('button');
+                btn.className = 'del-photo';
+                btn.textContent = '×';
+                btn.title = 'Usuń zdjęcie';
+                btn.onclick = () => {
+                    selectedFiles.splice(idx, 1);
+                    renderThumbs();
+                };
+
+                wrap.appendChild(img);
+                wrap.appendChild(btn);
+                preview.appendChild(wrap);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+
+    /* =====================================================
+       TABELA UPRAW – dodawanie i usuwanie wierszy
+       ===================================================== */
+    function dodajWiersz() {
+        const tbody = document.getElementById('tabela-upraw');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text"   class="ti" placeholder="nr działki"></td>
+            <td><input type="text"   class="ti" placeholder="np. jabłoń"></td>
+            <td><input type="number" class="ti" step="0.01" min="0" placeholder="0.00"></td>
+            <td><input type="number" class="ti" min="0" max="100" placeholder="0–100"></td>
+            <td><input type="text"   class="ti" placeholder="—"></td>
+            <td class="no-print">
+                <button class="btn-danger" onclick="usunWiersz(this)" title="Usuń wiersz">🗑</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function usunWiersz(btn) {
+        const row = btn.closest('tr');
+        const tbody = document.getElementById('tabela-upraw');
+        if (tbody.rows.length > 1) {
+            row.remove();
+        } else {
+            // Zostaw jeden pusty zamiast usuwać ostatni
+            row.querySelectorAll('input').forEach(i => i.value = '');
+        }
+    }
+
+
+    /* =====================================================
+       WALIDACJA przed drukiem
+       ===================================================== */
+    function waliduj() {
+        let ok = true;
+
+        function sprawdz(id, errId) {
+            const el  = document.getElementById(id);
+            const err = document.getElementById(errId);
+            if (!el.value.trim()) {
+                el.classList.add('field-error');
+                if (err) err.style.display = 'block';
+                ok = false;
+            } else {
+                el.classList.remove('field-error');
+                if (err) err.style.display = 'none';
+            }
         }
 
-        // 2. Obsługa podglądu zdjęć
-        document.getElementById('foto').addEventListener('change', function(e) {
-            const preview = document.getElementById('preview');
-            preview.innerHTML = ''; 
-            
-            Array.from(this.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = document.createElement('img');
-                    img.src = event.target.result;
-                    preview.appendChild(img);
-                }
-                reader.readAsDataURL(file);
-            });
+        sprawdz('imie-nazwisko', 'err-imie');
+        sprawdz('polisa', 'err-polisa');
+
+        return ok;
+    }
+
+
+    /* =====================================================
+       PRZYGOTOWANIE DO DRUKU
+       BUG FIX: wartości inputów zamieniamy na spany,
+       bo @media print nie renderuje value w niektórych
+       przeglądarkach (Safari, starszy Chrome)
+       ===================================================== */
+    function wstawSpany() {
+        document.querySelectorAll('section input[type="text"], section input[type="number"], section input[type="date"], section select').forEach(el => {
+            if (el.classList.contains('ti')) return; // tabela – obsługiwana osobno
+            const span = document.createElement('span');
+            span.className = el.value.trim() ? 'print-value' : 'print-value empty';
+            span.textContent = el.value.trim();
+            span.dataset.originalTag = el.outerHTML;
+            el.parentNode.insertBefore(span, el);
+            el.style.display = 'none';
+            el.dataset.spanRef = Date.now();
         });
 
-        // 3. Obsługa dodawania wierszy do tabeli
-        function dodajWiersz() {
-            const tabela = document.getElementById("tabela-upraw");
-            const nowyWiersz = document.createElement("tr");
+        // Tabela
+        document.querySelectorAll('input.ti').forEach(el => {
+            const span = document.createElement('span');
+            span.className = el.value.trim() ? 'print-value' : 'print-value empty';
+            span.textContent = el.value.trim();
+            el.parentNode.insertBefore(span, el);
+            el.style.display = 'none';
+        });
+    }
 
-            nowyWiersz.innerHTML = `
-                <td><input type="text" class="table-input"></td>
-                <td><input type="text" class="table-input"></td>
-                <td><input type="number" step="0.01" class="table-input"></td>
-                <td><input type="number" class="table-input"></td>
-                <td><input type="text" class="table-input"></td>
-            `;
+    function przywrocInputy() {
+        document.querySelectorAll('.print-value').forEach(span => span.remove());
+        document.querySelectorAll('section input, section select').forEach(el => {
+            el.style.display = '';
+        });
+        document.querySelectorAll('input.ti').forEach(el => {
+            el.style.display = '';
+        });
+    }
 
-            tabela.appendChild(nowyWiersz);
+    window.addEventListener('beforeprint', wstawSpany);
+    window.addEventListener('afterprint',  przywrocInputy);
+
+
+    /* =====================================================
+       GENERUJ RAPORT
+       ===================================================== */
+    function generujRaport() {
+        if (!waliduj()) {
+            alert('Uzupełnij wymagane pola (Imię i Nazwisko oraz Numer polisy) przed wygenerowaniem raportu.');
+            return;
         }
+        window.print();
+    }
     </script>
 </body>
 </html>
